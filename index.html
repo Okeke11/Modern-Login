@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Modern Login</title>
+    <style>
+        /* CSS: The Visual Arts Part */
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #0f0c29;  /* fallback */
+            background: linear-gradient(to right, #24243e, #302b63, #0f0c29);
+            font-family: 'Poppins', sans-serif;
+            color: white;
+            overflow: hidden;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 15px 25px rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            width: 300px;
+            position: relative;
+        }
+
+        h2 { text-align: center; margin-bottom: 30px; letter-spacing: 2px;}
+
+        .input-group { position: relative; margin-bottom: 30px; }
+
+        .input-group input {
+            width: 100%;
+            padding: 10px 0;
+            font-size: 16px;
+            color: #fff;
+            margin-bottom: 5px;
+            border: none;
+            border-bottom: 1px solid #fff;
+            outline: none;
+            background: transparent;
+        }
+        .password-container { position: relative; }
+        .toggle-eye {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #03e9f4;
+        }
+
+        .input-group label {
+            position: absolute;
+            top: 0; left: 0;
+            padding: 10px 0;
+            font-size: 16px;
+            color: #fff;
+            pointer-events: none;
+            transition: .5s;
+        }
+
+        /* The Animation Logic */
+        .input-group input:focus ~ label,
+        .input-group input:valid ~ label {
+            top: -20px;
+            left: 0;
+            color: #03e9f4;
+            font-size: 12px;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background: #03e9f4;
+            border: none;
+            border-radius: 5px;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover { background: #03939b; box-shadow: 0 0 5px #03e9f4; }
+        
+        .toggle-msg { text-align: center; margin-top: 15px; font-size: 12px; cursor: pointer; color: #ccc;}
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2 id="form-title">Login</h2>
+        
+        <form id="authForm">
+            <div class="input-group" id="user-group" style="display:none;">
+                <input type="text" id="username" >
+                <label>Username</label>
+            </div>
+
+            <div class="input-group">
+                <input type="email" id="email" required>
+                <label>Email</label>
+            </div>
+
+            <div class="input-group password-container">
+                <input type="password" id="password" required>
+                <label>Password</label>
+                <span class="toggle-eye" id="eye">👁️</span>
+            </div>
+
+            <button type="submit" id="submit-btn">Login</button>
+        </form>
+
+        <p class="toggle-msg" id="toggle-form">Don't have an account? Sign Up</p>
+    </div>
+
+    <script>
+    console.log("⚠️ DEBUG SCRIPT LOADED ⚠️");
+
+    const form = document.getElementById('authForm');
+    const toggleBtn = document.getElementById('toggle-form');
+    const userGroup = document.getElementById('user-group');
+    const title = document.getElementById('form-title');
+    const submitBtn = document.getElementById('submit-btn');
+
+    // Check URL params
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentMode = urlParams.get('mode');
+    console.log("Current Mode from URL:", currentMode);
+
+    let isLogin = true; 
+
+    // Initialize View
+    if (currentMode === 'signup') {
+        isLogin = false;
+        userGroup.style.display = 'block';
+        title.innerText = 'Sign Up';
+        submitBtn.innerText = 'Sign Up';
+        toggleBtn.innerText = "Already have an account? Login";
+        console.log("View set to: SIGNUP");
+        document.getElementById('username').required = true;
+    } else {
+        isLogin = true;
+        userGroup.style.display = 'none';
+        title.innerText = 'Login';
+        submitBtn.innerText = 'Login';
+        toggleBtn.innerText = "Don't have an account? Sign Up";
+        console.log("View set to: LOGIN");
+    }
+
+    // Toggle Button Logic
+    toggleBtn.addEventListener('click', () => {
+        console.log("Toggle clicked. Switching mode...");
+        if (isLogin) {
+            window.location.search = '?mode=signup';
+        } else {
+            window.location.search = '?mode=login';
+        }
+    });
+
+    // Eye Icon Logic
+    const eye = document.getElementById('eye');
+    const passwordInput = document.getElementById('password');
+    if(eye) {
+        eye.addEventListener('click', () => {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            eye.innerText = type === 'password' ? '👁️' : '🙈';
+        });
+    }
+
+    // FORM SUBMISSION LOGIC
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        console.log("🚀 Form Submitted!");
+
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const username = document.getElementById('username').value;
+
+        console.log("Captured Data:", { email, password, username });
+
+        const endpoint = isLogin ? 'http://localhost:5000/api/login' : 'http://localhost:5000/api/signup';
+        console.log("Attempting to hit endpoint:", endpoint);
+
+        const payload = isLogin ? { email, password } : { username, email, password };
+
+        try {
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            console.log("Server responded with status:", response.status);
+
+            const data = await response.json();
+            console.log("Data received from server:", data);
+
+            if (response.ok) {
+                console.log("✅ Success! Logic starting...");
+                if (isLogin) {
+                    console.log("Redirecting to dashboard...");
+                    // Try the fallback method if assign fails
+                    window.location.href = `dashboard.html?user=${data.username}`; 
+                } else {
+                    alert("Signup successful! Please login.");
+                    window.location.search = '?mode=login';
+                }
+            } else {
+                console.log("❌ Server returned error:", data.error);
+                alert(data.error || "Login failed");
+            }
+        } catch (error) {
+            console.error("🔥 CRITICAL ERROR:", error);
+            alert("Connection Failed! Is the server running?");
+        }
+    });
+</script>
+</body>
+</html>
